@@ -1,0 +1,8 @@
+"fastapi[standard]" 
+sqlalchemy[asyncio] 
+aiomysql 
+alembic 
+python-decouple 
+python-jose[cryptography] 
+passlib[bcrypt] 
+cryptography
