@@ -1,10 +1,17 @@
-from fastapi import APIRouter
-from .services import create_user
-from .schemas import UserCreate, UserResponse
+from fastapi import APIRouter, HTTPException, status
+from . import services
+from . import schemas 
 from db.config import session
+from .utils import verify_password
 
 router = APIRouter(tags=['Account'])
 
-@router.post("/register", response_model=UserResponse)
-async def register(session: session, user: UserCreate):
-  return await create_user(session, user)
+@router.post("/register", response_model=schemas.UserResponse)
+async def register(session: session, user: schemas.UserCreate):
+  return await services.create_user(session, user)
+
+@router.post("/login")
+async def login(session: session, user_login: schemas.UserLogin): 
+  user = await services.authenticate_user(session, user_login)
+
+  

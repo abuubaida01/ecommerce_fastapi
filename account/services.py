@@ -2,10 +2,10 @@ from account.models import User, RefreshToken
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from sqlalchemy import Select
-from .schemas import UserCreate
-from .utils import hash_password
+from . import schemas
+from .utils import hash_password, verify_password
 
-async def create_user(session: AsyncSession, user: UserCreate): 
+async def create_user(session: AsyncSession, user: schemas.UserCreate): 
   
   # check if user already exist
   stmt = Select(User).where(User.email == user.email)
@@ -25,3 +25,14 @@ async def create_user(session: AsyncSession, user: UserCreate):
   await session.refresh(new_user)
   
   return new_user
+
+
+async def authenticate_user(session: AsyncSession, user_login: schemas.UserLogin): 
+  stmt = Select(User).where(User.email == user_login.email)
+  user = await session.scalar(stmt)
+
+  if not user or not verify_password(user_login.password, user.hashed_password): 
+    raise HTTPException(status=status.HTTP_400_BAD_REQUEST, detail="User email or password mismatched")
+  
+  return user
+ 

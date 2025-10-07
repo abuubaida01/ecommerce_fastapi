@@ -14,3 +14,7 @@ class UserResponse(UserBase):
   model_config = {"from_attributes": True}
   
    
+class UserLogin(BaseModel): 
+  email: EmailStr
+  password: str
+  
