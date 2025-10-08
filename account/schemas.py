@@ -9,6 +9,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase): 
   password: str
 
+
+class UserOut(UserBase):
+  id: int
+  model_config = {"from_attributes": True}
+
+
 class UserResponse(UserBase): 
   id: int
   model_config = {"from_attributes": True}
