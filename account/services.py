@@ -57,9 +57,28 @@ async def create_token(session: AsyncSession, user: User):
   )
   session.add(refresh_token)
   await session.commit()
+
   return {
     "access_token": access_token, 
     "refresh_token": refresh_token_str,
     "token_type": "bearer"
   }
 
+
+async def verify_refresh_token(session: AsyncSession, token: str): 
+  query = await session.scalars(select(RefreshToken).where(token == RefreshToken.token))
+  object = query.first()
+  
+  if object and not object.revoked: 
+    expires_at = object.expires_at
+
+    if expires_at.tzinfo is None: 
+      expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at > datetime.now(timezone.utc):
+      user_stmt =select(User).where(User.id == object.user_id)
+      query = await session.scalars(user_stmt)
+      object = query.first()
+      return object
+
+  return None 

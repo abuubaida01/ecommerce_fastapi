@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.responses import JSONResponse
 from . import services
 from . import schemas 
@@ -30,7 +30,7 @@ async def login(session: session, user_login: schemas.UserLogin):
     httponly=True, 
     secure=True, 
     samesite="lax",
-    max_age=60*60*24*1 # one day correct expiry time not a token expiery time
+    max_age=60#*60*24*1 # one day correct expiry time not a token expiery time
   )
 
   # set refresh_token into the cookie
@@ -49,3 +49,35 @@ async def me(user: User =Depends(dep.get_current_user)):
   return user
 
 
+@router.post('/refresh')
+async def refresh_token(session: session, request: Request): 
+  token = request.cookies.get("refresh_token")
+  if not token: 
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing refresh token")
+  
+  user = await services.verify_refresh_token(session, token) 
+  if not user: 
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired refresh token")
+  
+  token = await services.create_token(session, user)
+  response = JSONResponse(content={"message": "Token refreshed successfully"})
+  
+  response.set_cookie(
+    key="access_token",
+    value=token['access_token'],
+    httponly=True, 
+    secure=True, 
+    samesite="lax",
+    max_age=60*60*24*1
+  )
+
+  response.set_cookie(
+    key="refresh_token",
+    value=token['refresh_token'],
+    httponly=True, 
+    secure=True, 
+    samesite="lax",
+    max_age=60*60*24*7
+  )
+
+  return response 
