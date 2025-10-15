@@ -82,3 +82,93 @@ async def verify_refresh_token(session: AsyncSession, token: str):
       return object
 
   return None 
+
+
+async def create_email_verification_token(user_id: int): 
+  token = utils.create_email_verification_token(user_id=user_id) 
+  link = f"localhost:8000/link={token}"
+  return {"message": "token send succesfully", "link": link}
+  
+
+
+async def verify_email_token(session: AsyncSession, token: str): 
+  user_id = utils.verify_email_token_and_get_user_id(token=token, token_type="verify_email")
+  
+  if not user_id: 
+    raise HTTPException(detail="Invalid or expire token", status_code=status.HTTP_400_BAD_REQUEST)
+  
+  stmt = select(User).where(user_id == User.id)
+  result = await session.scalars(stmt)
+  user = result.first() 
+
+  if not user: 
+    raise HTTPException(detail="User not found", status_code=status.HTTP_400_BAD_REQUEST)
+
+  user.is_verified = True 
+  session.add(user)
+  await session.commit()
+  return {"msg": "Email verifid successfully"}
+
+
+
+async def update_and_verify_new_password(session: AsyncSession, user: User, data: schemas.ChangePassword): 
+  if not utils.verify_password(data.old_password, user.hashed_password): 
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Old password is incorrect")
+  
+  user.hashed_password = utils.hash_password(data.new_password)
+  session.add(user) 
+  await session.commit()
+
+  return {"msg": "Password changed successfully"}
+
+
+
+# to check and get data via email
+async def get_user_via_email(session: AsyncSession, email: str): 
+  stmt = select(User).where(User.email == email)
+  result = await session.scalars(stmt)
+  user = result.first() 
+  if not user: 
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found with this email")
+  
+  return user
+
+
+async def create_resent_password_email(session: AsyncSession, data: schemas.ForgetPassword): 
+  user = await get_user_via_email(session, data.email)
+  token = utils.create_email_verification_token(user_id=user.id, action="password_reset") 
+  link = f"localhost:8000/link={token}"
+  return {"message": "token send succesfully", "link": link}
+
+
+
+async def verify_token_and_reset_password(session: AsyncSession, data: schemas.ResetPassword): 
+  user_id = utils.verify_email_token_and_get_user_id(token=data.token, token_type="password_reset")
+  
+  if not user_id: 
+    raise HTTPException(detail="Invalid or expire token", status_code=status.HTTP_400_BAD_REQUEST)
+  
+  stmt = select(User).where(user_id == User.id)
+  result = await session.scalars(stmt)
+  user = result.first() 
+
+  if not user: 
+    raise HTTPException(detail="User not found", status_code=status.HTTP_400_BAD_REQUEST)
+
+  user.hashed_password = utils.hash_password(data.new_password) 
+  session.add(user)
+  await session.commit()
+  return {"msg": "Reset password successfully"}
+
+
+
+async def revoke_refresh_token(session: AsyncSession, token: str): 
+  stmt = select(RefreshToken).where(RefreshToken.token== token)
+  result = await session.scalars(stmt)
+  db_token = result.first()
+
+  if db_token: 
+    db_token.revoked = True
+    await session.commit()
+  
+  

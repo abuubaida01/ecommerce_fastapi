@@ -33,3 +33,21 @@ def decode_token(token):
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
   
+
+def create_email_verification_token(user_id: int, action: str = "verify_email"): 
+    expire = datetime.now(timezone.utc)
+    
+    if action == "verify_email": 
+        expire += timedelta(hours=EMAIL_VERIFICATION_TOKEN_TIME_HOUR) 
+    else: 
+        expire += timedelta(hours=EMAIL_PASSWORD_RESET_TOKEN_TIME_HOUR) 
+    
+    to_encode = {"sub": str(user_id), "type": action, "exp": expire}
+    return jwt.encode(to_encode, JWT_SECRET_KEY, JWT_ALGORITHM)
+
+def verify_email_token_and_get_user_id(token: str, token_type:str): 
+    payload = decode_token(token=token)
+    if not payload or payload.get('type') != token_type:
+        return None 
+    
+    return int(payload.get('sub'))

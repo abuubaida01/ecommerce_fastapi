@@ -81,3 +81,45 @@ async def refresh_token(session: session, request: Request):
   )
 
   return response 
+
+
+@router.post("/send-verification-email")
+async def send_verification_email(user_id: int): 
+  return await services.create_email_verification_token(user_id)
+
+@router.get("/verify-email")
+async def verify_email(session: session, token:str): 
+  return await services.verify_email_token(session, token)
+
+@router.put('/change-password')
+async def change_user_password(session: session, data: schemas.ChangePassword, user: User = Depends(dep.get_current_user)): 
+  return await services.update_and_verify_new_password(session, user, data) 
+
+
+@router.post("/send-reset-password-email")
+async def send_reset_password_email(session: session, data: schemas.ForgetPassword): 
+  return await services.create_resent_password_email(session, data)
+
+
+@router.post("/reset-password")
+async def reset_password(session: session, data: schemas.ResetPassword): 
+  return await services.verify_token_and_reset_password(session, data)
+
+
+
+@router.get('/admin')
+async def admin(user: User = Depends(dep.require_admin)): 
+  return {"msg": f"Welcome admin {user.email}"}
+
+
+@router.post("/logout")
+async def logout(session: session, request: Request, user: User = Depends(dep.get_current_user)): 
+  refresh_token = request.cookies.get("refresh_token")
+  if refresh_token: 
+    await services.revoke_refresh_token(session, refresh_token)
+
+  response  = JSONResponse(content={'detail': "logged out"})
+  response.delete_cookie('refresh_token')
+  response.delete_cookie('access_token') 
+  return response
+   
