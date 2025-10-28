@@ -171,4 +171,13 @@ async def revoke_refresh_token(session: AsyncSession, token: str):
     db_token.revoked = True
     await session.commit()
   
+
+async def make_admin(session: AsyncSession, user: User): 
+  if not user: 
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only authenticated users can promote themselves to admin")
   
+  user.is_admin = True 
+  session.add(user)
+  await session.commit()
+  await session.refresh(user)
+  return user

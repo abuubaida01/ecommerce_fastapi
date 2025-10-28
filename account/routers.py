@@ -123,3 +123,7 @@ async def logout(session: session, request: Request, user: User = Depends(dep.ge
   response.delete_cookie('access_token') 
   return response
    
+@router.put("/make-me-admin", response_model=schemas.UserOut)
+async def make_admin(session: session, user: User = Depends(dep.get_current_user)):
+  return await services.make_admin(session, user)
+

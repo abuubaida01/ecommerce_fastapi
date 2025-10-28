@@ -3,3 +3,4 @@
 # these models are being imported in the alembic/env.py file
 
 from account.models import User, RefreshToken
+from product.models import Category, Product, product_category_table
