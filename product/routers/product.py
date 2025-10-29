@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status, Query
 from account.models import User
 from db.config import session
-from product.schemas import ProductCreate, ProductOut, PaginatedProductOut
+from product.schemas import ProductCreate, ProductOut, PaginatedProductOut, ProductUpdate
 from account.dependency import require_admin
 from typing import Annotated
 from product.services import *
@@ -76,3 +76,45 @@ async def product_get_by_slug(session: session, slug: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
   return product 
+
+
+@router.patch("/{product_id}", response_model=ProductOut)
+async def product_update_by_id(
+  session: session, 
+  product_id: int, 
+  title: str | None = Form(None), 
+  description: str | None =Form(None), 
+  price: float | None  = Form(None), 
+  stock_quantity: int | None  = Form(None), 
+  category_ids: list[int] | None = None, 
+  image_url: UploadFile | None = File(None),
+  admin_user: User = Depends(require_admin)
+): 
+  data = ProductUpdate(
+    title=title, 
+    description=description,
+    price=price, 
+    stock_quantity=stock_quantity, 
+    category_ids=category_ids
+  )
+
+  product = await update_product(session, product_id, data, image_url)
+  
+  if not product: 
+    raise HTTPException(detail="product not found", status=status.HTTP_404_NOT_FOUND)
+  
+  return product
+
+
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_one_product(
+  session: session, 
+  product_id: int, 
+  admin_user: User = Depends(require_admin)
+  ):
+
+  success = await delete_product(session, product_id)
+  if not success: 
+    raise HTTPException(detail="product not found", status_code=status.HTTP_400_BAD_REQUEST) 
+
+

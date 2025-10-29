@@ -2,7 +2,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Text, Float, DateTime, ForeignKey, Table, Column
 from datetime import datetime, timezone
 from db.base import Base
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING: 
+    from cart.models import CartItem
 
 # Many-to-many association table
 product_category_table = Table(
@@ -33,6 +36,8 @@ class Product(Base):
         back_populates="products",
         cascade="all",
     )
+
+    cart_items: Mapped[list["CartItem"]] = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
 
 
 class Category(Base):

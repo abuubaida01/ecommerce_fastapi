@@ -94,7 +94,6 @@ async def get_product_by_slug(
   return result.scalars()
 
 
-
 async def search_product(
     session: AsyncSession,
     category_name: list[str] | None = None, 
@@ -141,3 +140,52 @@ async def search_product(
     "limit": limit, 
     "items": products
   }
+
+
+async def update_product(
+    session: AsyncSession,
+    product_id: int, 
+    data: sc.ProductUpdate, 
+    image_url: UploadFile | None = None 
+) -> sc.ProductOut: 
+  
+  stmt = select(Product).options(selectinload(Product.categories)).where(Product.id == product_id)
+  result = await session.execute(stmt)
+  product = result.scalar_one_or_none()
+  
+  if not product: 
+    return None 
+  
+  if data.category_ids: 
+    category_stmt = select(Category).where(Category.id.in_(data.category_ids))
+    category_result = await session.execute(category_stmt)
+    product.categories = category_result.scalars().all()
+  
+  for key, value in data.model_dump(exclude={"category_id"}, exclude_none=True).items(): 
+    setattr(product, key, value)
+
+  if image_url: 
+    image_path = await save_upload_file(image_url, "images")
+    product.image_url = image_path 
+
+  await session.commit()
+  await session.refresh(product)
+  
+  return product
+
+
+async def delete_product(
+    session: AsyncSession, 
+    product_id: int
+  ) -> bool: 
+  
+  stmt = select(Product).where(Product.id == product_id)
+  result = await session.execute(stmt)
+
+  product = result.scalar()
+  if not product: 
+    return None 
+  
+  await session.delete(product)
+  await session.commit()
+  return True

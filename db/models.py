@@ -2,5 +2,6 @@
 # so, in whole app, if I create any model, I will mention here 
 # these models are being imported in the alembic/env.py file
 
-from account.models import User, RefreshToken
-from product.models import Category, Product, product_category_table
+from cart import models as cart_models
+from product import models as product_models
+from account import models as account_models
