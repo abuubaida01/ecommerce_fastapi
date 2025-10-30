@@ -30,7 +30,7 @@ async def login(session: session, user_login: schemas.UserLogin):
     httponly=True, 
     secure=True, 
     samesite="lax",
-    max_age=60#*60*24*1 # one day correct expiry time not a token expiery time
+    max_age=60*60*24*1 # one day correct expiry time not a token expiery time
   )
 
   # set refresh_token into the cookie
@@ -68,7 +68,7 @@ async def refresh_token(session: session, request: Request):
     httponly=True, 
     secure=True, 
     samesite="lax",
-    max_age=60*60*24*1
+    max_age=60*60*24*2
   )
 
   response.set_cookie(

@@ -24,22 +24,25 @@ class ProductCreate(ProductBase):
   category_ids: list[int] | None = None 
 
 class ProductOut(ProductBase): 
-  id: int
-  slug: str 
-  categories: list[CategoryOut] = []
-  image_url: str | None = None 
+    id: int
+    slug: str 
+    categories: list[CategoryOut] = []
+    image_url: str | None = None 
   
-  model_config = {
-    'from_attributes': True
-  }
+    model_config = {
+        'from_attributes': True
+    }
 
-  
 
-class PaginatedProductOut(ProductBase): 
-  total: int 
-  page: int 
-  limit: int 
-  items: list[ProductOut]
+class PaginatedProductOut(BaseModel): 
+    total: int 
+    page: int 
+    limit: int 
+    items: list[ProductOut]
+
+    model_config = {
+        'from_attributes': True
+    }
 
 
 class ProductUpdate(BaseModel): 
