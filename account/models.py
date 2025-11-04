@@ -2,14 +2,14 @@ from __future__ import annotations
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, DateTime, ForeignKey
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 from db.base import Base
 
 
 if TYPE_CHECKING:
     from cart.models import CartItem
     from shipping.models import ShippingAddress
-
+    from payment.models import Payment
 
 class User(Base):
     __tablename__ = "users"
@@ -47,6 +47,9 @@ class User(Base):
     shipping_address: Mapped[List["ShippingAddress"]] = relationship(
         "ShippingAddress", back_populates="user", cascade="all, delete-orphan"
     )
+
+    payment: Mapped[Optional['Payment']] = relationship("Payment", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
 
 
 class RefreshToken(Base):
