@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from db.config import session
 from account.models import User
-from account.dependency import get_current_user
+from account.dependency import get_current_user, require_admin
 from shipping import schemas as sc
 from shipping.models import ShippingAddress
 from shipping import services as ss
@@ -57,3 +57,24 @@ async def delete_user_address(
   ) -> dict:
   
   return await ss.delete_user_shipping_address(session, user.id, address_id)
+
+
+@router.get("/status/{order_id}", response_model=sc.Out)
+async def get_user_order_shipping_status_out(
+  session: session, 
+  order_id: int, 
+  user: User = Depends(get_current_user)
+  ): 
+  return await ss.get_user_shipping_address(session, user.id, order_id)
+
+
+
+
+@router.patch("/status/{order_id}", response_model=sc.Out)
+async def change_shipping_status(
+    session: session,
+    order_id: int,
+    data: sc.Update,
+    admin_user = Depends(require_admin) 
+):
+    return await ss.update_shipping_status(session, order_id, data.status)
