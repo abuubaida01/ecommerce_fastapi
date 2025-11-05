@@ -1,12 +1,12 @@
-# 🛍️ E-Commerce Backend (FastAPI)
+# E-Commerce Backend (FastAPI)
 
 A high-performance, modular **E-Commerce backend** built using **FastAPI**, designed to support scalable online stores with asynchronous APIs, MySQL integration, and modular architecture for key business domains like **products**, **cart**, **orders**, **payments**, and **shipping**.
 
 ---
 
-## 🚀 Features
+## Features
 
-### 🧩 Core Modules
+### Core Modules
 | Module | Description |
 |--------|--------------|
 | **Account** | Handles user registration, authentication (JWT), profile management, and admin controls. |
@@ -21,7 +21,7 @@ A high-performance, modular **E-Commerce backend** built using **FastAPI**, desi
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 | Category | Technology |
 |-----------|-------------|
